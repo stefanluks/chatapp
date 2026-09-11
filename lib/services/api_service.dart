@@ -62,8 +62,7 @@ class ApiService {
   Map<String, String> get headers {
     return {
       'Content-Type': 'application/json',
-      if (token != null)
-        'Authorization': 'Bearer $token',
+      if (token != null) 'Authorization': 'Bearer $token',
     };
   }
 
@@ -89,19 +88,12 @@ class ApiService {
   }) async {
     final response = await http.post(
       Uri.parse('$baseUrl/auth/register'),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({
-        'username': username,
-        'password': password,
-      }),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'username': username, 'password': password}),
     );
 
     if (response.statusCode != 201) {
-      throw Exception(
-        _getErrorMessage(response),
-      );
+      throw Exception(_getErrorMessage(response));
     }
   }
 
@@ -115,19 +107,12 @@ class ApiService {
   }) async {
     final response = await http.post(
       Uri.parse('$baseUrl/auth/login'),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({
-        'username': username,
-        'password': password,
-      }),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'username': username, 'password': password}),
     );
 
     if (response.statusCode != 200) {
-      throw Exception(
-        _getErrorMessage(response),
-      );
+      throw Exception(_getErrorMessage(response));
     }
 
     final data = jsonDecode(response.body);
@@ -138,37 +123,22 @@ class ApiService {
 
     final String name = data['user']['username'];
 
-    await _saveSession(
-      newToken: newToken,
-      newUserId: id,
-      newUsername: name,
-    );
+    await _saveSession(newToken: newToken, newUserId: id, newUsername: name);
   }
 
   // =================================================
   // BUSCAR USUÁRIOS
   // =================================================
 
-  Future<List<dynamic>> searchUsers(
-    String search,
-  ) async {
+  Future<List<dynamic>> searchUsers(String search) async {
     final uri = Uri.parse(
       '$baseUrl/users/search',
-    ).replace(
-      queryParameters: {
-        'username': search,
-      },
-    );
+    ).replace(queryParameters: {'username': search});
 
-    final response = await http.get(
-      uri,
-      headers: headers,
-    );
+    final response = await http.get(uri, headers: headers);
 
     if (response.statusCode != 200) {
-      throw Exception(
-        _getErrorMessage(response),
-      );
+      throw Exception(_getErrorMessage(response));
     }
 
     return jsonDecode(response.body);
@@ -185,9 +155,7 @@ class ApiService {
     );
 
     if (response.statusCode != 200) {
-      throw Exception(
-        _getErrorMessage(response),
-      );
+      throw Exception(_getErrorMessage(response));
     }
 
     return jsonDecode(response.body);
@@ -197,22 +165,31 @@ class ApiService {
   // CRIAR CONVERSA
   // =================================================
 
-  Future<Map<String, dynamic>> createConversation(
-    int otherUserId,
+  Future<Map<String, dynamic>> createConversation(int otherUserId) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/conversations'),
+      headers: headers,
+      body: jsonEncode({'userId': otherUserId}),
+    );
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      throw Exception(_getErrorMessage(response));
+    }
+
+    return jsonDecode(response.body);
+  }
+
+  Future<Map<String, dynamic>> createGroupConversation(
+    List<int> userIds,
   ) async {
     final response = await http.post(
       Uri.parse('$baseUrl/conversations'),
       headers: headers,
-      body: jsonEncode({
-        'userId': otherUserId,
-      }),
+      body: jsonEncode({'userIds': userIds}),
     );
 
-    if (response.statusCode != 200 &&
-        response.statusCode != 201) {
-      throw Exception(
-        _getErrorMessage(response),
-      );
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      throw Exception(_getErrorMessage(response));
     }
 
     return jsonDecode(response.body);
@@ -222,20 +199,14 @@ class ApiService {
   // LISTAR MENSAGENS
   // =================================================
 
-  Future<List<dynamic>> getMessages(
-    int conversationId,
-  ) async {
+  Future<List<dynamic>> getMessages(int conversationId) async {
     final response = await http.get(
-      Uri.parse(
-        '$baseUrl/messages/$conversationId',
-      ),
+      Uri.parse('$baseUrl/messages/$conversationId'),
       headers: headers,
     );
 
     if (response.statusCode != 200) {
-      throw Exception(
-        _getErrorMessage(response),
-      );
+      throw Exception(_getErrorMessage(response));
     }
 
     return jsonDecode(response.body);
@@ -250,19 +221,13 @@ class ApiService {
     String content,
   ) async {
     final response = await http.post(
-      Uri.parse(
-        '$baseUrl/messages/$conversationId',
-      ),
+      Uri.parse('$baseUrl/messages/$conversationId'),
       headers: headers,
-      body: jsonEncode({
-        'content': content,
-      }),
+      body: jsonEncode({'content': content}),
     );
 
     if (response.statusCode != 201) {
-      throw Exception(
-        _getErrorMessage(response),
-      );
+      throw Exception(_getErrorMessage(response));
     }
 
     return jsonDecode(response.body);

@@ -4,21 +4,16 @@ import '../services/api_service.dart';
 import 'chat_screen.dart';
 import 'login_screen.dart';
 import 'search_user_screen.dart';
+import 'group_creation_screen.dart';
 
-class ConversationsScreen
-    extends StatefulWidget {
-  const ConversationsScreen({
-    super.key,
-  });
+class ConversationsScreen extends StatefulWidget {
+  const ConversationsScreen({super.key});
 
   @override
-  State<ConversationsScreen>
-      createState() =>
-          _ConversationsScreenState();
+  State<ConversationsScreen> createState() => _ConversationsScreenState();
 }
 
-class _ConversationsScreenState
-    extends State<ConversationsScreen> {
+class _ConversationsScreenState extends State<ConversationsScreen> {
   bool loading = true;
 
   List<dynamic> conversations = [];
@@ -32,9 +27,7 @@ class _ConversationsScreenState
 
   Future<void> loadConversations() async {
     try {
-      final data = await ApiService
-          .instance
-          .getConversations();
+      final data = await ApiService.instance.getConversations();
 
       if (!mounted) return;
 
@@ -49,17 +42,9 @@ class _ConversationsScreenState
         loading = false;
       });
 
-      ScaffoldMessenger.of(context)
-          .showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            error
-                .toString()
-                .replaceFirst(
-                  'Exception: ',
-                  '',
-                ),
-          ),
+          content: Text(error.toString().replaceFirst('Exception: ', '')),
         ),
       );
     }
@@ -72,10 +57,7 @@ class _ConversationsScreenState
 
     Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(
-        builder: (_) =>
-            const LoginScreen(),
-      ),
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
       (_) => false,
     );
   }
@@ -83,10 +65,7 @@ class _ConversationsScreenState
   Future<void> openSearch() async {
     await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) =>
-            const SearchUserScreen(),
-      ),
+      MaterialPageRoute(builder: (_) => const SearchUserScreen()),
     );
 
     loadConversations();
@@ -97,32 +76,36 @@ class _ConversationsScreenState
     return Scaffold(
       appBar: AppBar(
         title: Column(
-          crossAxisAlignment:
-              CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'SLChat',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            const Text('SLChat', style: TextStyle(fontWeight: FontWeight.bold)),
 
             Text(
               '@${ApiService.instance.username ?? ''}',
               style: const TextStyle(
                 fontSize: 12,
-                fontWeight:
-                    FontWeight.normal,
+                fontWeight: FontWeight.normal,
               ),
             ),
           ],
         ),
         actions: [
           IconButton(
-            onPressed:
-                loadConversations,
-            icon:
-                const Icon(Icons.refresh),
+            onPressed: loadConversations,
+            icon: const Icon(Icons.refresh),
+          ),
+
+          IconButton(
+            onPressed: () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const GroupCreationScreen()),
+              );
+
+              loadConversations();
+            },
+            tooltip: 'Novo grupo',
+            icon: const Icon(Icons.group_add),
           ),
 
           PopupMenuButton(
@@ -131,10 +114,7 @@ class _ConversationsScreenState
                 value: 'logout',
                 child: Row(
                   children: [
-                    Icon(
-                      Icons.logout,
-                      color: Colors.black87,
-                    ),
+                    Icon(Icons.logout, color: Colors.black87),
                     SizedBox(width: 10),
                     Text('Sair'),
                   ],
@@ -150,154 +130,91 @@ class _ConversationsScreenState
         ],
       ),
 
-      floatingActionButton:
-          FloatingActionButton(
+      floatingActionButton: FloatingActionButton(
         onPressed: openSearch,
-        backgroundColor:
-            const Color(0xFF1565C0),
+        backgroundColor: const Color(0xFF1565C0),
         foregroundColor: Colors.white,
-        child: const Icon(
-          Icons.chat,
-        ),
+        child: const Icon(Icons.chat),
       ),
 
       body: RefreshIndicator(
         onRefresh: loadConversations,
 
         child: loading
-            ? const Center(
-                child:
-                    CircularProgressIndicator(),
-              )
+            ? const Center(child: CircularProgressIndicator())
             : conversations.isEmpty
-                ? ListView(
-                    children: const [
-                      SizedBox(
-                        height: 180,
-                      ),
-                      Icon(
-                        Icons
-                            .chat_bubble_outline,
-                        size: 80,
-                        color:
-                            Colors.grey,
-                      ),
-                      SizedBox(
-                        height: 20,
-                      ),
-                      Center(
-                        child: Text(
-                          'Nenhuma conversa ainda',
-                          style: TextStyle(
-                            color:
-                                Colors.grey,
-                            fontSize: 17,
-                          ),
-                        ),
-                      ),
-                    ],
-                  )
-                : ListView.separated(
-                    itemCount:
-                        conversations
-                            .length,
-                    separatorBuilder:
-                        (_, __) =>
-                            const Divider(
-                      height: 1,
-                      indent: 80,
+            ? ListView(
+                children: const [
+                  SizedBox(height: 180),
+                  Icon(Icons.chat_bubble_outline, size: 80, color: Colors.grey),
+                  SizedBox(height: 20),
+                  Center(
+                    child: Text(
+                      'Nenhuma conversa ainda',
+                      style: TextStyle(color: Colors.grey, fontSize: 17),
                     ),
-                    itemBuilder:
-                        (context, index) {
-                      final conversation =
-                          conversations[
-                              index];
-
-                      return ListTile(
-                        contentPadding:
-                            const EdgeInsets
-                                .symmetric(
-                          horizontal: 18,
-                          vertical: 6,
-                        ),
-
-                        leading:
-                            CircleAvatar(
-                          radius: 27,
-                          backgroundColor:
-                              const Color(
-                            0xFFBBDEFB,
-                          ),
-                          child: Text(
-                            conversation[
-                                    'username']
-                                .toString()
-                                .substring(
-                                  0,
-                                  1,
-                                )
-                                .toUpperCase(),
-                            style:
-                                const TextStyle(
-                              fontSize: 20,
-                              fontWeight:
-                                  FontWeight
-                                      .bold,
-                              color: Color(
-                                0xFF0D47A1,
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        title: Text(
-                          conversation[
-                                  'username'] ??
-                              '',
-                          style:
-                              const TextStyle(
-                            fontWeight:
-                                FontWeight
-                                    .bold,
-                          ),
-                        ),
-
-                        subtitle: Text(
-                          conversation[
-                                  'last_message'] ??
-                              'Conversa iniciada',
-                          maxLines: 1,
-                          overflow:
-                              TextOverflow
-                                  .ellipsis,
-                        ),
-
-                        trailing:
-                            const Icon(
-                          Icons.chevron_right,
-                        ),
-
-                        onTap: () async {
-                          await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  ChatScreen(
-                                conversationId:
-                                    conversation[
-                                        'id'],
-                                username:
-                                    conversation[
-                                        'username'],
-                              ),
-                            ),
-                          );
-
-                          loadConversations();
-                        },
-                      );
-                    },
                   ),
+                ],
+              )
+            : ListView.separated(
+                itemCount: conversations.length,
+                separatorBuilder: (_, _) =>
+                    const Divider(height: 1, indent: 80),
+                itemBuilder: (context, index) {
+                  final conversation = conversations[index];
+                  final displayName =
+                      conversation['name'] ??
+                      conversation['username'] ??
+                      'Conversa';
+
+                  return ListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 18,
+                      vertical: 6,
+                    ),
+
+                    leading: CircleAvatar(
+                      radius: 27,
+                      backgroundColor: const Color(0xFFBBDEFB),
+                      child: Text(
+                        displayName.toString().substring(0, 1).toUpperCase(),
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF0D47A1),
+                        ),
+                      ),
+                    ),
+
+                    title: Text(
+                      displayName.toString(),
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+
+                    subtitle: Text(
+                      conversation['last_message'] ?? 'Conversa iniciada',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+
+                    trailing: const Icon(Icons.chevron_right),
+
+                    onTap: () async {
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ChatScreen(
+                            conversationId: conversation['id'],
+                            username: displayName.toString(),
+                          ),
+                        ),
+                      );
+
+                      loadConversations();
+                    },
+                  );
+                },
+              ),
       ),
     );
   }
