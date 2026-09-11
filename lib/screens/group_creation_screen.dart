@@ -32,7 +32,13 @@ class _GroupCreationScreenState extends State<GroupCreationScreen> {
       final result = await ApiService.instance.searchUsers(text);
 
       if (mounted) {
-        setState(() => users = result);
+        setState(() {
+          users = result.where((user) => !_isCurrentUser(user)).toList();
+          final currentUserId = ApiService.instance.userId;
+          if (currentUserId != null) {
+            selectedUsers.remove(currentUserId);
+          }
+        });
       }
     } catch (error) {
       if (mounted) {
@@ -46,6 +52,8 @@ class _GroupCreationScreenState extends State<GroupCreationScreen> {
   }
 
   void toggleUser(dynamic user) {
+    if (_isCurrentUser(user)) return;
+
     final id = user['id'] as int;
     final username = user['username'].toString();
 
@@ -58,14 +66,33 @@ class _GroupCreationScreenState extends State<GroupCreationScreen> {
     });
   }
 
+  bool _isCurrentUser(dynamic user) {
+    final currentUserId = ApiService.instance.userId;
+    final currentUsername = ApiService.instance.username;
+
+    return (currentUserId != null && user['id'] == currentUserId) ||
+        (currentUsername != null &&
+            user['username'].toString().toLowerCase() ==
+                currentUsername.toLowerCase());
+  }
+
   Future<void> createGroup() async {
     if (selectedUsers.length < 2 || creating) return;
+
+    final participantIds = selectedUsers.keys
+        .where((id) => id != ApiService.instance.userId)
+        .toList();
+
+    if (participantIds.length < 2) {
+      _showError('Selecione pelo menos duas outras pessoas para o grupo.');
+      return;
+    }
 
     setState(() => creating = true);
 
     try {
       final response = await ApiService.instance.createGroupConversation(
-        selectedUsers.keys.toList(),
+        participantIds,
       );
       final conversation = response['conversation'] as Map<String, dynamic>;
       final groupName =
@@ -95,19 +122,11 @@ class _GroupCreationScreenState extends State<GroupCreationScreen> {
 
   void _showError(Object error) {
     final message = error.toString().replaceFirst('Exception: ', '');
-    final isUnsupportedByApi = message.toLowerCase().contains(
-          'informe o usuário',
-        ) ||
-        message.toLowerCase().contains('informe o usuario');
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         duration: const Duration(seconds: 6),
-        content: Text(
-          isUnsupportedByApi
-              ? 'A API atual ainda não suporta grupos. O backend precisa aceitar userIds.'
-              : message,
-        ),
+        content: Text(message),
       ),
     );
   }

@@ -71,6 +71,28 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
     loadConversations();
   }
 
+  String conversationDisplayName(Map<String, dynamic> conversation) {
+    final name = conversation['name']?.toString().trim();
+    if (name != null && name.isNotEmpty) return name;
+
+    final participants = conversation['participants'];
+    if (participants is List) {
+      final usernames = participants
+          .whereType<Map>()
+          .where((participant) => participant['id'] != ApiService.instance.userId)
+          .map((participant) => participant['username']?.toString())
+          .whereType<String>()
+          .where((username) => username.isNotEmpty)
+          .toList();
+
+      if (usernames.isNotEmpty) {
+        return usernames.join(', ');
+      }
+    }
+
+    return conversation['username']?.toString() ?? 'Conversa';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -162,10 +184,7 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
                     const Divider(height: 1, indent: 80),
                 itemBuilder: (context, index) {
                   final conversation = conversations[index];
-                  final displayName =
-                      conversation['name'] ??
-                      conversation['username'] ??
-                      'Conversa';
+                  final displayName = conversationDisplayName(conversation);
 
                   return ListTile(
                     contentPadding: const EdgeInsets.symmetric(
@@ -177,7 +196,7 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
                       radius: 27,
                       backgroundColor: const Color(0xFFBBDEFB),
                       child: Text(
-                        displayName.toString().substring(0, 1).toUpperCase(),
+                        displayName.substring(0, 1).toUpperCase(),
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -187,7 +206,7 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
                     ),
 
                     title: Text(
-                      displayName.toString(),
+                      displayName,
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
 
@@ -205,7 +224,7 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
                         MaterialPageRoute(
                           builder: (_) => ChatScreen(
                             conversationId: conversation['id'],
-                            username: displayName.toString(),
+                            username: displayName,
                           ),
                         ),
                       );
